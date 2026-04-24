@@ -1,73 +1,69 @@
-# ./
+# Auto-diagnostic Sûreté Habitation
 
-This template should help get you started developing with Vue 3 in Vite.
+> Outil développé par **MHAILI Majda** — **CPTM · Cellule de Prévention Technique de la Malveillance**
 
-## Recommended IDE Setup
+---
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Présentation
 
-## Recommended Browser Setup
+Application web d'auto-diagnostic permettant aux citoyens d'évaluer le niveau de sécurité de leur habitation (maison individuelle ou appartement) face aux risques d'intrusion et de cambriolage.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+À l'issue du questionnaire, l'utilisateur obtient :
 
-## Type Support for `.vue` Imports in TS
+- un **niveau de sécurité** (Insuffisant / Moyen / Excellent) ;
+- des **conseils personnalisés** selon ses réponses ;
+- un **rapport PDF téléchargeable** récapitulant le diagnostic et les préconisations.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+---
 
-## Customize configuration
+## Stack technique
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+| Technologie  
+| -----------------------------------------------------
+| [Vue 3](https://vuejs.org/)  
+| [@gouvminint/vue-dsfr](https://vue-dsfr.netlify.app/)
 
-## Project Setup
+---
 
-```sh
+## Installation
+
+```bash
+# Cloner le dépôt
+git clone https://github.com/GendarmerieNationale/autodiag-particuliers.git
+cd Auto-diagnostic
+
+# Installer les dépendances
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+# Lancer le serveur de développement
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+---
 
-```sh
-npm run build
-```
+## Build & déploiement
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
-
-```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
+```bash
+# Construire pour la production
 npm run build
 
-# Runs the end-to-end tests
-npm run test:e2e
-# Runs the tests only on Chromium
-npm run test:e2e -- --project=chromium
-# Runs the tests of a specific file
-npm run test:e2e -- tests/example.spec.ts
-# Runs the tests in debug mode
-npm run test:e2e -- --debug
+# Déployer sur GitHub Pages (branche gh-pages)
+npm run deploy
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+L'application est déployée à l'adresse :
+**https://GendarmerieNationale.github.io/Auto-diagnostic/**
 
-```sh
-npm run lint
-```
+## Données
+
+Les questionnaires et conseils sont entièrement pilotés par des fichiers JSON dans `src/data/` — aucune base de données requise.
+
+---
+
+## Licence
+
+Ce projet est publié sous la **Licence Ouverte 2.0 / Open Licence 2.0** d'Etalab.
+
+Texte complet : https://github.com/etalab/licence-ouverte/blob/master/LO.md
+
+**Auteur** : MHAILI Majda — Gendarmerie Nationale · CPTM

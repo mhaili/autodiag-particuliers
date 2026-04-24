@@ -44,14 +44,14 @@
   "imm_volets_travail": "Fermez vos volets donnant sur la voie publique lorsque vous partez au travail pour ne pas signaler votre absence.",
 
   "acces_controle": "Signalez l'absence de contrôle d'accès (badge/code) à votre syndic : c'est un équipement indispensable pour sécuriser l'entrée de l'immeuble.",
-  "acces_serrure_securisee": "Alertez votre syndic si la porte d'entrée de l'immeuble n'est pas équipée d'une serrure sécurisée : c'est une obligation réglementaire dans de nombreux cas.",
-  "acces_interphone": "Demandez à votre syndic l'installation d'un interphone ou d'un visiophone : il permet d'identifier les visiteurs avant d'ouvrir la porte.",
+  "acces_serrure_securisee": "Alertez votre syndic si la porte d'entrée de l'immeuble n'est pas équipée d'une serrure sécurisée",
+  "acces_interphone": "Demandez à votre syndic l'installation d'un visiophone : il permet d'identifier les visiteurs avant d'ouvrir la porte d'entrée de l'immeuble.",
   "acces_cameras_hall": "Suggérez à votre syndic l'installation de caméras dans le hall : elles dissuadent les intrusions et facilitent les enquêtes en cas d'incident.",
 
   "log_porte_paliere": "Remplacez votre porte palière par un modèle anti-effraction 3 points : c'est la protection la plus efficace contre les effractions en appartement.",
   "log_oeilleton": "Installez un œilleton grand-angle sur votre porte palière pour identifier vos visiteurs sans ouvrir.",
   "log_sonnette": "Équipez-vous d'une sonnette ou d'un visiophone près de votre porte palière pour contrôler vos accès.",
-  "log_alarme": "Installez une alarme anti-intrusion dans votre appartement, même en immeuble : elle est votre dernière ligne de défense.",
+  "log_alarme": "Installez une alarme anti-intrusion dans votre appartement, même en immeuble : rapprochez-vous de votre syndic pour connaître la réglementation et les modalités d'installation.",
   "log_alarme_detect_porte": "Posez un détecteur d'ouverture sur votre porte d'entrée : il déclenchera l'alarme dès la tentative d'effraction.",
   "log_detect_volumetrique": "Orientez vos détecteurs volumétriques vers vos entrées et fenêtres pour une couverture maximale de votre appartement.",
   "log_telesurveil": "Connectez votre alarme à un opérateur de télésurveillance ou paramétrez une alerte sur votre téléphone portable.",
@@ -59,8 +59,8 @@
   "log_parking_rue": "Stationnez votre véhicule dans un parking sécurisé si possible et ne laissez aucun objet visible à l'intérieur.",
 
   "appt_vacances_rs": "Ne publiez jamais vos dates de vacances sur les réseaux sociaux : ces informations sont exploitées par les cambrioleurs.",
-  "appt_vacances_clef": "Confiez une clef à un voisin ou un proche de confiance pour qu'il puisse vérifier votre appartement pendant vos absences.",
+  "appt_vacances_clef": "Confiez une clef à un voisin ou un proche de confiance pour qu'il puisse vérifier votre appartement et relever le courrier pendant vos absences.",
   "appt_vacances_clef_paillasson": "Ne cachez jamais vos clefs sous le paillasson ou dans une cachette : c'est le premier endroit contrôlé par un cambrioleur.",
-  "appt_vacances_volets": "Fermez vos volets avant de partir en vacances pour dissimuler votre absence et renforcer la sécurité physique de vos ouvrants.",
+  "appt_vacances_volets": "Fermez vos volets avant de partir en vacances pour renforcer la sécurité physique de vos ouvrants.",
   "appt_heures_clef": "Même pour une courte absence, ne laissez jamais vos clefs dans une cachette à l'extérieur. Remettez-les directement en main propre."
 }

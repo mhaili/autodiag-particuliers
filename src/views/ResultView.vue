@@ -8,14 +8,14 @@
       <div class="result-hero" :class="`result-hero--${level}`">
         <div class="result-hero__mascot">
           <div class="mascot" :class="`mascot--${level}`">
-            <i :class="mascotIcon"></i>
+            <img :src="mascotSrc" :alt="`Mascotte ${level}`" class="mascot__img" />
           </div>
         </div>
 
         <div class="result-hero__content">
           <div class="result-hero__label">Votre score</div>
           <div class="result-hero__score">
-            <span class="result-score-num">{{ scoreValue }}</span>
+            <span class="result-score-num">{{ score }}</span>
             <span class="result-score-total">/ {{ state.totalPossible }}</span>
           </div>
           <div class="result-hero__pct">
@@ -40,60 +40,54 @@
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="result-actions">
-        <button
-          type="button"
-          class="fr-btn"
-          @click="$router.push('/preconisations')"
-        >
-          Voir les préconisations
-          <i class="ri-book-open-line" aria-hidden="true"></i>
-        </button>
-        <button
-          type="button"
-          class="fr-btn fr-btn--secondary"
-          @click="openOTV"
-        >
-          Opération Tranquillité Vacances
-          <i class="ri-external-link-line" aria-hidden="true"></i>
-        </button>
-        <button
-          type="button"
-          class="fr-btn fr-btn--secondary"
-          @click="restart"
-        >
-          <i class="ri-restart-line" aria-hidden="true"></i>
-          Recommencer le diagnostic
-        </button>
-      </div>
-
-      <!-- Download -->
-      <div class="result-download">
-        <button
-          type="button"
-          class="result-download__btn"
-          @click="downloadDiagnostic"
-        >
-          <i class="ri-download-2-line" aria-hidden="true"></i>
-          Télécharger mon diagnostic (PDF)
-        </button>
-        <p class="result-download__hint">
-          <i class="ri-information-line" aria-hidden="true"></i>
-          Une fenêtre d'impression s'ouvre — choisissez « Enregistrer en PDF »
-        </p>
-      </div>
-
       <!-- CTA contact if score faible -->
       <div v-if="level === 'faible'" class="result-contact-cta">
         <div class="contact-cta-icon"><i class="ri-customer-service-2-line"></i></div>
         <div>
           <p class="contact-cta-title">Besoin d'accompagnement ?</p>
-          <p class="contact-cta-desc">Prenez contact avec votre correspondant sûreté via l'application <strong>MaSécurité</strong>.</p>
+          <p class="contact-cta-desc">Votre niveau de sécurité est insuffisant. Nous vous invitons à vous rapprocher de votre brigade de gendarmerie pour un accompagnement personnalisé.</p>
+          <a href="https://www.masecurite.interieur.gouv.fr/fr/trouver-un-commissariat-une-gendarmerie" target="_blank" rel="noopener noreferrer" class="fr-link" style="display:block;margin-bottom:0.4rem">
+            Trouver ma brigade
+          </a>
           <a href="https://www.masecurite.interieur.gouv.fr/" target="_blank" rel="noopener noreferrer" class="fr-link">
-            Accéder à MaSécurité <i class="ri-external-link-line"></i>
+            Accéder à MaSécurité
           </a>
         </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="result-actions">
+        <DsfrButton
+          label="Voir les préconisations"
+          icon="ri-book-open-line"
+          :icon-right="true"
+          @click="$router.push('/preconisations')"
+        />
+        <DsfrButton
+          label="Opération Tranquillité Vacances"
+          icon="ri-external-link-line"
+          :icon-right="true"
+          :secondary="true"
+          @click="openOTV"
+        />
+        <DsfrButton
+          label="Recommencer le diagnostic"
+          icon="ri-restart-line"
+          :secondary="true"
+          @click="restart"
+        />
+      </div>
+
+      <!-- Download -->
+      <div class="result-download">
+        <DsfrButton
+          :label="isGenerating ? 'Génération en cours…' : 'Télécharger mon diagnostic (PDF)'"
+          :icon="isGenerating ? 'ri-loader-4-line' : 'ri-download-2-line'"
+          :disabled="isGenerating"
+          size="lg"
+          class="result-download__btn"
+          @click="downloadDiagnostic"
+        />
       </div>
 
     </main>
@@ -101,17 +95,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuestionnaire } from '@/composables/useQuestionnaire.js'
 import AppHeader from '@/components/AppHeader.vue'
-import maisonData from '@/data/maison.json'
-import appartementData from '@/data/appartement.json'
 import conseils from '@/data/conseils.json'
 import recommendations from '@/data/recommendations.json'
 
 const router = useRouter()
-const { state, score, scorePct, scoreLevel, reset } = useQuestionnaire()
+const { state, score, scorePct, scoreLevel, allQuestions, reset } = useQuestionnaire()
+const isGenerating = ref(false)
 
 onMounted(() => {
   if (!state.finished) {
@@ -119,15 +112,10 @@ onMounted(() => {
   }
 })
 
-const scoreValue = computed(() => score.value)
 const level = computed(() => scoreLevel.value)
 const sectionBadges = computed(() => state.sectionBadges)
 
-const mascotIcon = computed(() => {
-  if (level.value === 'excellent') return 'ri-emotion-happy-line'
-  if (level.value === 'moyen') return 'ri-emotion-normal-line'
-  return 'ri-emotion-unhappy-line'
-})
+const mascotSrc = computed(() => `${import.meta.env.BASE_URL}images/mascotte-${level.value}.png`)
 
 const resultMessages = {
   excellent: {
@@ -147,7 +135,7 @@ const resultMessages = {
 const resultMessage = computed(() => resultMessages[level.value])
 
 function openOTV() {
-  window.open('https://www.masecurite.interieur.gouv.fr/', '_blank', 'noopener,noreferrer')
+  window.open('https://www.masecurite.interieur.gouv.fr/fr/demarches-en-ligne/operation-tranquillite-vacances?hl=OTV', '_blank', 'noopener,noreferrer')
 }
 
 function restart() {
@@ -155,185 +143,323 @@ function restart() {
   router.push('/')
 }
 
-function downloadDiagnostic() {
-  const allQuestions = state.logementType === 'maison' ? maisonData : appartementData
+async function downloadDiagnostic() {
+  if (isGenerating.value) return
+  isGenerating.value = true
 
-  const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-  const logementLabel = { maison: 'Maison individuelle', appartement: 'Appartement' }[state.logementType] || '—'
-  const locLabel    = { ville: 'Ville', petite_commune: 'Petite commune', campagne: 'Campagne', lotissement: 'Lotissement' }[state.localisation] || '—'
-  const levelLabel  = { excellent: 'Bonne sécurité', moyen: 'Sécurité moyenne', faible: 'Sécurité insuffisante' }[level.value] || '—'
-  const levelColor  = { excellent: '#1f8d49', moyen: '#b34000', faible: '#ce0500' }[level.value] || '#000091'
+  try {
+    const { jsPDF } = await import('jspdf')
+    const { default: autoTable } = await import('jspdf-autotable')
 
-  const ansLabel = v => v === 'oui' ? 'Oui' : v === 'non' ? 'Non' : 'Je ne sais pas'
-  const ansColor = v => v === 'oui' ? '#1f8d49' : v === 'non' ? '#ce0500' : '#666'
+    const questions = allQuestions.value
+    const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    const logementLabel = { maison: 'Maison individuelle', appartement: 'Appartement' }[state.logementType] || '—'
+    const locLabel = { ville: 'Ville', petite_commune: 'Petite commune', campagne: 'Campagne', lotissement: 'Lotissement' }[state.localisation] || '—'
+    const levelLabel = { excellent: 'Bonne sécurité', moyen: 'Sécurité moyenne', faible: 'Sécurité insuffisante' }[level.value] || '—'
+    const levelRgb = { excellent: [31, 141, 73], moyen: [179, 64, 0], faible: [206, 5, 0] }[level.value] || [0, 0, 145]
+    const ansLabel = v => v === 'oui' ? 'Oui' : v === 'non' ? 'Non' : 'Je ne sais pas'
 
-  // ── Recommandations personnalisées ─────────────────────────────
-  // Collect all 0-point answers that have a conseil
-  const personalRecs = []
-
-  // Check TypeView answers first
-  const specialIds = ['type_eclairage', 'type_videoprotection']
-  specialIds.forEach(id => {
-    const ans = state.answers[id]
-    if (ans && ans.points === 0 && conseils[id]) {
-      personalRecs.push({ section: 'Informations générales', conseil: conseils[id] })
+    // ── Fetch images as base64 ───────────────────────────────────
+    async function toB64(url) {
+      try {
+        const res = await fetch(url)
+        const blob = await res.blob()
+        return await new Promise(resolve => {
+          const fr = new FileReader()
+          fr.onload = () => resolve(fr.result)
+          fr.readAsDataURL(blob)
+        })
+      } catch { return null }
     }
-  })
+    const base = `${window.location.origin}${import.meta.env.BASE_URL}images/`
+    const [logoB64, mascotB64, sigB64] = await Promise.all([
+      toB64(base + 'logo-cptm.png'),
+      toB64(base + `mascotte-${level.value}.png`),
+      toB64(base + 'signature.png'),
+    ])
 
-  // Walk JSON questions in order
-  const sectionOrder = []
-  const bySection = {}
-  allQuestions.forEach(q => {
-    const ans = state.answers[q.id]
-    if (!ans) return
-    // Collect Q&A for the second part
-    if (!bySection[q.section]) { bySection[q.section] = []; sectionOrder.push(q.section) }
-    bySection[q.section].push({ text: q.text, value: ans.value, points: ans.points })
-    // Collect recommendations for 0-point answers
-    if (ans.points === 0 && conseils[q.id]) {
-      personalRecs.push({ section: q.section, conseil: conseils[q.id] })
+    // ── Init document ────────────────────────────────────────────
+    // ── Load Marianne font (WOFF → TTF) ──────────────────────────
+    async function woffToTtf(woffBuf) {
+      const view = new DataView(woffBuf)
+      if (view.getUint32(0) !== 0x774F4646) throw new Error('Not a WOFF file')
+      const flavor = view.getUint32(4)
+      const numTables = view.getUint16(12)
+      const tables = []
+      for (let i = 0; i < numTables; i++) {
+        const o = 44 + i * 20
+        tables.push({ tag: view.getUint32(o), offset: view.getUint32(o + 4), compLength: view.getUint32(o + 8), origLength: view.getUint32(o + 12), checksum: view.getUint32(o + 16) })
+      }
+      const decomp = await Promise.all(tables.map(async t => {
+        const raw = new Uint8Array(woffBuf, t.offset, t.compLength)
+        if (t.compLength === t.origLength) return { ...t, data: raw }
+        const ds = new DecompressionStream('deflate')
+        const writer = ds.writable.getWriter()
+        const reader = ds.readable.getReader()
+        const CHUNK = 65536
+        for (let i = 0; i < raw.length; i += CHUNK) await writer.write(raw.subarray(i, Math.min(i + CHUNK, raw.length)))
+        writer.close()
+        const chunks = []
+        for (;;) { const { value, done } = await reader.read(); if (done) break; chunks.push(value) }
+        const out = new Uint8Array(chunks.reduce((s, c) => s + c.length, 0))
+        let pos = 0; for (const c of chunks) { out.set(c, pos); pos += c.length }
+        return { ...t, data: out }
+      }))
+      const n = numTables
+      const pow2 = Math.pow(2, Math.floor(Math.log2(n)))
+      let dataStart = 12 + n * 16
+      const offsets = decomp.map(t => { const o = dataStart; dataStart += Math.ceil(t.origLength / 4) * 4; return o })
+      const ttf = new ArrayBuffer(dataStart)
+      const ov = new DataView(ttf); const ob = new Uint8Array(ttf)
+      ov.setUint32(0, flavor); ov.setUint16(4, n)
+      ov.setUint16(6, pow2 * 16); ov.setUint16(8, Math.floor(Math.log2(n))); ov.setUint16(10, n * 16 - pow2 * 16)
+      for (let i = 0; i < n; i++) {
+        const t = decomp[i]; const d = 12 + i * 16
+        ov.setUint32(d, t.tag); ov.setUint32(d + 4, t.checksum)
+        ov.setUint32(d + 8, offsets[i]); ov.setUint32(d + 12, t.origLength)
+        ob.set(t.data.subarray(0, t.origLength), offsets[i])
+      }
+      return ttf
     }
-  })
+    function bufToB64(buf) {
+      const b = new Uint8Array(buf); let s = ''
+      for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i])
+      return btoa(s)
+    }
+    const fontBase = `${window.location.origin}${import.meta.env.BASE_URL}fonts/`
+    const [marianneRegB64, marianneBoldB64] = await Promise.all([
+      fetch(fontBase + 'Marianne-Regular.woff').then(r => r.arrayBuffer()).then(woffToTtf).then(bufToB64).catch(() => null),
+      fetch(fontBase + 'Marianne-Bold.woff').then(r => r.arrayBuffer()).then(woffToTtf).then(bufToB64).catch(() => null),
+    ])
 
-  // ── HTML blocks ────────────────────────────────────────────────
-  const recRows = personalRecs.map(r =>
-    `<tr>
-      <td style="width:22%;padding:6px 10px;border-bottom:1px solid #f5e6e6;font-size:9pt;color:#8d0000;font-weight:600;vertical-align:top">${r.section}</td>
-      <td style="width:78%;padding:6px 10px;border-bottom:1px solid #f5e6e6;font-size:10pt;color:#333;vertical-align:top">${r.conseil}</td>
-    </tr>`
-  ).join('')
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
 
-  const sectionsHTML = sectionOrder.map(sec => {
-    const rows = bySection[sec].map(item =>
-      `<tr>
-        <td style="width:70%;padding:4px 8px;border-bottom:1px solid #f0f0f0;font-size:9.5pt">${item.text}</td>
-        <td style="width:15%;padding:4px 8px;border-bottom:1px solid #f0f0f0;font-weight:700;color:${ansColor(item.value)};font-size:9.5pt">${ansLabel(item.value)}</td>
-        <td style="width:15%;padding:4px 8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:9.5pt">${item.points} pt</td>
-      </tr>`
-    ).join('')
-    return `
-      <div style="margin-bottom:16px">
-        <div style="background:#f0f0ff;border-left:4px solid #000091;padding:6px 12px;font-weight:700;color:#000091;font-size:10.5pt;margin-bottom:4px">${sec}</div>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#fafafa">
-            <th style="padding:5px 8px;text-align:left;font-size:8.5pt;color:#777;border-bottom:2px solid #e0e0e0">Question</th>
-            <th style="padding:5px 8px;text-align:left;font-size:8.5pt;color:#777;border-bottom:2px solid #e0e0e0">Réponse</th>
-            <th style="padding:5px 8px;text-align:left;font-size:8.5pt;color:#777;border-bottom:2px solid #e0e0e0">Points</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`
-  }).join('')
+    // Register Marianne — fallback to helvetica if loading failed
+    let fontName = 'helvetica'
+    if (marianneRegB64 && marianneBoldB64) {
+      doc.addFileToVFS('Marianne-Regular.ttf', marianneRegB64)
+      doc.addFont('Marianne-Regular.ttf', 'Marianne', 'normal')
+      doc.addFileToVFS('Marianne-Bold.ttf', marianneBoldB64)
+      doc.addFont('Marianne-Bold.ttf', 'Marianne', 'bold')
+      fontName = 'Marianne'
+    }
+    const M = 14        // margin
+    const W = 182       // content width (210 - 2*14)
+    const PH = 297      // page height
 
-  const generalRecs = recommendations.map(sec =>
-    `<div style="margin-bottom:14px">
-      <div style="font-weight:700;color:#000091;font-size:10pt;margin-bottom:4px">${sec.titre}</div>
-      <ul style="margin:0;padding-left:16px">
-        ${sec.contenu.map(c => `<li style="font-size:9pt;color:#444;margin-bottom:3px;line-height:1.5">${c.replace(/https?:\/\/[^\s]+/, '').trim()}</li>`).join('')}
-      </ul>
-    </div>`
-  ).join('')
+    let y = 0
 
-  const eclairage = state.answers['type_eclairage']
-  const video = state.answers['type_videoprotection']
-  const infoRows = [
-    eclairage ? `<tr><td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;font-size:9.5pt;width:70%">Éclairage public dans la rue</td><td style="font-weight:700;color:${ansColor(eclairage.value)};font-size:9.5pt;padding:4px 8px;border-bottom:1px solid #f0f0f0;width:15%">${ansLabel(eclairage.value)}</td><td style="color:#888;font-size:9.5pt;padding:4px 8px;border-bottom:1px solid #f0f0f0;width:15%">${eclairage.points} pt</td></tr>` : '',
-    video ? `<tr><td style="padding:4px 8px;font-size:9.5pt;width:70%">Vidéo-protection dans la commune</td><td style="font-weight:700;color:${ansColor(video.value)};font-size:9.5pt;padding:4px 8px;width:15%">${ansLabel(video.value)}</td><td style="color:#888;font-size:9.5pt;padding:4px 8px;width:15%">${video.points} pt</td></tr>` : '',
-  ].join('')
+    function check(needed = 20) {
+      if (y + needed > PH - M - 12) {
+        doc.addPage()
+        y = M
+      }
+    }
 
-  // ── Full HTML document ─────────────────────────────────────────
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Diagnostic Sûreté Habitation — ${date}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; color: #333; padding: 24px; font-size: 11pt; }
-    h2 { font-size: 13pt; color: #000091; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 2px solid #000091; }
-    h3 { font-size: 11pt; font-weight: 700; color: #555; margin: 18px 0 8px; }
-    @page { margin: 1.5cm; }
-    @media print { body { padding: 0; } }
-  </style>
-</head>
-<body>
+    // ── HEADER ───────────────────────────────────────────────────
+    doc.setFillColor(0, 0, 145)
+    doc.rect(0, 0, 210, 26, 'F')
+    if (logoB64) doc.addImage(logoB64, 'PNG', M, 3, 18, 18)
+    const txX = logoB64 ? M + 22 : M
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(6.5); doc.setFont(fontName, 'normal')
+    doc.text('GENDARMERIE NATIONALE · PRÉVENTION TECHNIQUE DE LA MALVEILLANCE', txX, 8.5)
+    doc.setFontSize(15); doc.setFont(fontName, 'bold')
+    doc.text('Auto-diagnostic Sûreté Habitation', txX, 16)
+    doc.setFontSize(7.5); doc.setFont(fontName, 'normal')
+    doc.text(`Réalisé le ${date} — Document confidentiel`, txX, 22)
 
-  <!-- En-tête -->
-  <div style="background:#000091;color:#fff;padding:18px 22px;margin-bottom:20px">
-    <div style="font-size:8pt;opacity:.7;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px">Gendarmerie Nationale · Prévention Technique de la Malveillance</div>
-    <div style="font-size:20pt;font-weight:900">Auto-diagnostic Sûreté Habitation</div>
-    <div style="font-size:9pt;opacity:.75;margin-top:6px">Réalisé le ${date} — Document personnel confidentiel</div>
-  </div>
+    y = 32
 
-  <!-- Résumé + score -->
-  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-    <tr>
-      <td style="width:33%;padding:10px 14px;background:#f5f5fe;border:1px solid #e0e0f0;vertical-align:top">
-        <div style="font-size:8pt;color:#777;text-transform:uppercase;letter-spacing:.08em">Logement</div>
-        <div style="font-size:12pt;font-weight:700;color:#161616;margin-top:3px">${logementLabel}</div>
-      </td>
-      <td style="width:33%;padding:10px 14px;background:#f5f5fe;border:1px solid #e0e0f0;border-left:none;vertical-align:top">
-        <div style="font-size:8pt;color:#777;text-transform:uppercase;letter-spacing:.08em">Localisation</div>
-        <div style="font-size:12pt;font-weight:700;color:#161616;margin-top:3px">${locLabel}</div>
-      </td>
-      <td style="width:34%;padding:10px 14px;background:#000091;color:#fff;vertical-align:top;text-align:center">
-        <div style="font-size:8pt;opacity:.75;text-transform:uppercase;letter-spacing:.08em">Score obtenu</div>
-        <div style="font-size:26pt;font-weight:900;line-height:1;margin-top:2px">${score.value}<span style="font-size:13pt;opacity:.7"> / ${state.totalPossible}</span></div>
-        <div style="font-size:11pt;font-weight:700">${scorePct.value}%</div>
-        <div style="display:inline-block;background:#fff;color:${levelColor};font-weight:700;font-size:10pt;padding:2px 10px;border-radius:3px;margin-top:5px">${levelLabel}</div>
-      </td>
-    </tr>
-  </table>
+    // ── INFO ROW (3 cells) ───────────────────────────────────────
+    const bW = W / 3
+    const bH = 18
+    // Cell 1
+    doc.setFillColor(245, 245, 254); doc.setDrawColor(220, 220, 240)
+    doc.rect(M, y, bW, bH, 'FD')
+    doc.setTextColor(130, 130, 160); doc.setFontSize(6.5); doc.setFont(fontName, 'normal')
+    doc.text('LOGEMENT', M + 3, y + 5)
+    doc.setTextColor(22, 22, 22); doc.setFontSize(10); doc.setFont(fontName, 'bold')
+    doc.text(logementLabel, M + 3, y + 13)
+    // Cell 2
+    doc.setFillColor(245, 245, 254); doc.setDrawColor(220, 220, 240)
+    doc.rect(M + bW, y, bW, bH, 'FD')
+    doc.setTextColor(130, 130, 160); doc.setFontSize(6.5); doc.setFont(fontName, 'normal')
+    doc.text('LOCALISATION', M + bW + 3, y + 5)
+    doc.setTextColor(22, 22, 22); doc.setFontSize(10); doc.setFont(fontName, 'bold')
+    doc.text(locLabel, M + bW + 3, y + 13)
+    // Cell 3 (niveau — colored)
+    doc.setFillColor(levelRgb[0], levelRgb[1], levelRgb[2])
+    doc.rect(M + bW * 2, y, bW, bH, 'F')
+    if (mascotB64) doc.addImage(mascotB64, 'PNG', M + bW * 2 + 2, y + 1, 13, 13)
+    const lvlTxX = mascotB64 ? M + bW * 2 + 17 : M + bW * 2 + 3
+    doc.setTextColor(255, 255, 255); doc.setFontSize(6.5); doc.setFont(fontName, 'normal')
+    doc.text('NIVEAU DE SÉCURITÉ', lvlTxX, y + 6)
+    doc.setFontSize(9); doc.setFont(fontName, 'bold')
+    doc.text(levelLabel, lvlTxX, y + 13)
 
-  <!-- Informations générales -->
-  ${infoRows ? `
-  <div style="margin-bottom:20px">
-    <div style="background:#f0f0ff;border-left:4px solid #000091;padding:6px 12px;font-weight:700;color:#000091;font-size:10.5pt;margin-bottom:4px">Informations générales</div>
-    <table style="width:100%;border-collapse:collapse">
-      <thead><tr style="background:#fafafa">
-        <th style="padding:5px 8px;text-align:left;font-size:8.5pt;color:#777;border-bottom:2px solid #e0e0e0">Question</th>
-        <th style="padding:5px 8px;text-align:left;font-size:8.5pt;color:#777;border-bottom:2px solid #e0e0e0">Réponse</th>
-        <th style="padding:5px 8px;text-align:left;font-size:8.5pt;color:#777;border-bottom:2px solid #e0e0e0">Points</th>
-      </tr></thead>
-      <tbody>${infoRows}</tbody>
-    </table>
-  </div>` : ''}
+    y += bH + 8
 
-  <!-- ★ Recommandations personnalisées ★ -->
-  ${recRows ? `
-  <h2 style="color:#ce0500;border-bottom-color:#ce0500">Vos axes d'amélioration personnalisés</h2>
-  <p style="font-size:9pt;color:#888;margin-bottom:10px">Les points suivants sont issus de vos réponses et nécessitent une attention particulière.</p>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:22px;background:#fff9f9;border:1px solid #fce0e0;border-radius:4px">
-    <thead><tr style="background:#fce9e9">
-      <th style="padding:6px 10px;text-align:left;font-size:8.5pt;color:#8d0000;border-bottom:2px solid #f5e6e6;width:22%">Section</th>
-      <th style="padding:6px 10px;text-align:left;font-size:8.5pt;color:#8d0000;border-bottom:2px solid #f5e6e6;width:78%">Conseil</th>
-    </tr></thead>
-    <tbody>${recRows}</tbody>
-  </table>` : `<p style="margin-bottom:20px;color:#1f8d49;font-weight:700">Aucun axe d'amélioration majeur identifié — Excellent niveau de sécurité !</p>`}
+    // ── COLLECT DATA ─────────────────────────────────────────────
+    const personalRecs = []
+    ;['type_eclairage', 'type_videoprotection'].forEach(id => {
+      const ans = state.answers[id]
+      if (ans && ans.points === 0 && conseils[id])
+        personalRecs.push({ section: 'Infos générales', conseil: conseils[id] })
+    })
 
-  <!-- Réponses complètes -->
-  <h2>Vos réponses par section</h2>
-  <div style="margin-bottom:22px">${sectionsHTML}</div>
+    const bySection = {}
+    const sectionOrder = []
+    const eclairage = state.answers['type_eclairage']
+    const video = state.answers['type_videoprotection']
+    if (eclairage || video) {
+      bySection['Informations générales'] = []
+      sectionOrder.push('Informations générales')
+      if (eclairage) bySection['Informations générales'].push({ text: 'Éclairage public dans la rue', value: eclairage.value, points: eclairage.points })
+      if (video)     bySection['Informations générales'].push({ text: 'Vidéo-protection dans la commune', value: video.value, points: video.points })
+    }
+    questions.forEach(q => {
+      const ans = state.answers[q.id]
+      if (!ans) return
+      if (!bySection[q.section]) { bySection[q.section] = []; sectionOrder.push(q.section) }
+      bySection[q.section].push({ text: q.text, value: ans.value, points: ans.points })
+      if (ans.points === 0 && conseils[q.id])
+        personalRecs.push({ section: q.section, conseil: conseils[q.id] })
+    })
 
-  <!-- Préconisations générales -->
-  <h2>Préconisations générales — Gendarmerie Nationale</h2>
-  <div style="margin-bottom:16px">${generalRecs}</div>
+    // ── PERSONAL RECS ────────────────────────────────────────────
+    check(18)
+    doc.setFillColor(252, 233, 233); doc.setDrawColor(206, 5, 0); doc.setLineWidth(0.4)
+    doc.rect(M, y, W, 7, 'F'); doc.line(M, y, M, y + 7)
+    doc.setLineWidth(0.2)
+    doc.setTextColor(141, 0, 0); doc.setFontSize(9.5); doc.setFont(fontName, 'bold')
+    doc.text('Vos axes d\'amélioration personnalisés', M + 4, y + 5)
+    y += 8
 
-  <!-- Pied de page -->
-  <div style="border-top:1px solid #e0e0e0;padding-top:10px;margin-top:10px;font-size:8.5pt;color:#999;text-align:center">
-    <p>Document confidentiel à usage personnel — Ne constitue pas un rapport officiel</p>
-    <p style="margin-top:3px">Pour toute assistance : <strong>masecurite.interieur.gouv.fr</strong> · Composez le <strong>17</strong> en cas d'urgence</p>
-  </div>
+    if (personalRecs.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Section', 'Conseil']],
+        body: personalRecs.map(r => [r.section, r.conseil]),
+        theme: 'plain',
+        headStyles: { fillColor: [252, 233, 233], textColor: [141, 0, 0], fontSize: 7.5, fontStyle: 'bold', font: fontName },
+        columnStyles: { 0: { cellWidth: 36, fontSize: 8, textColor: [141, 0, 0], fontStyle: 'bold', overflow: 'linebreak' }, 1: { fontSize: 8, overflow: 'linebreak' } },
+        styles: { lineColor: [245, 225, 225], lineWidth: 0.25, overflow: 'linebreak', font: fontName },
+        tableWidth: W,
+        margin: { left: M, right: M },
+      })
+      y = doc.lastAutoTable.finalY + 8
+    } else {
+      doc.setTextColor(31, 141, 73); doc.setFontSize(9); doc.setFont(fontName, 'bold')
+      doc.text('Aucun axe d\'amélioration — Excellent niveau de sécurité !', M, y + 4)
+      y += 12
+    }
 
-</body>
-</html>`
+    // ── ANSWERS BY SECTION ───────────────────────────────────────
+    check(15)
+    doc.setFillColor(240, 240, 255); doc.setDrawColor(0, 0, 145); doc.setLineWidth(0.4)
+    doc.rect(M, y, W, 7, 'F'); doc.line(M, y, M, y + 7)
+    doc.setLineWidth(0.2)
+    doc.setTextColor(0, 0, 145); doc.setFontSize(9.5); doc.setFont(fontName, 'bold')
+    doc.text('Vos réponses par section', M + 4, y + 5)
+    y += 8
 
-  const win = window.open('', '_blank', 'width=920,height=750')
-  if (win) {
-    win.document.write(html)
-    win.document.close()
-    win.focus()
-    setTimeout(() => win.print(), 500)
+    for (const sec of sectionOrder) {
+      check(20)
+      autoTable(doc, {
+        startY: y,
+        head: [[{ content: sec, colSpan: 2, styles: { fillColor: [240, 240, 255], textColor: [0, 0, 145], fontStyle: 'bold', fontSize: 8.5 } }]],
+        body: bySection[sec].map(item => {
+          const missed = item.points === 0
+          const ansC = item.value === 'oui' ? [26, 92, 51] : item.value === 'non' ? [141, 0, 0] : [90, 90, 150]
+          return [
+            { content: item.text, styles: { textColor: missed ? [107, 51, 0] : [50, 50, 50], fontStyle: missed ? 'bold' : 'normal', fillColor: missed ? [255, 244, 229] : [255, 255, 255], fontSize: 8 } },
+            { content: ansLabel(item.value), styles: { textColor: ansC, fontStyle: 'bold', fillColor: missed ? [255, 244, 229] : [255, 255, 255], halign: 'center', fontSize: 8 } },
+          ]
+        }),
+        columnStyles: { 0: { overflow: 'linebreak' }, 1: { cellWidth: 28, halign: 'center' } },
+        styles: { lineColor: [220, 220, 235], lineWidth: 0.25, overflow: 'linebreak', font: fontName },
+        tableWidth: W,
+        margin: { left: M, right: M },
+      })
+      y = doc.lastAutoTable.finalY + 4
+    }
+
+    y += 4
+
+    // ── GENERAL RECOMMENDATIONS ──────────────────────────────────
+    check(15)
+    doc.setFillColor(240, 240, 255); doc.setDrawColor(0, 0, 145); doc.setLineWidth(0.4)
+    doc.rect(M, y, W, 7, 'F'); doc.line(M, y, M, y + 7)
+    doc.setLineWidth(0.2)
+    doc.setTextColor(0, 0, 145); doc.setFontSize(9.5); doc.setFont(fontName, 'bold')
+    doc.text('Préconisations générales — Gendarmerie Nationale', M + 4, y + 5)
+    y += 13
+
+    recommendations.forEach(sec => {
+      check(14)
+      doc.setTextColor(0, 0, 145); doc.setFontSize(8.5); doc.setFont(fontName, 'bold')
+      doc.text(sec.titre, M, y); y += 6
+      sec.contenu.forEach(item => {
+        check(6)
+        const plain = item.replace(/<[^>]+>/g, '')
+        const lines = doc.splitTextToSize(`• ${plain}`, W - 4)
+        doc.setTextColor(70, 70, 70); doc.setFontSize(8); doc.setFont(fontName, 'normal')
+        lines.forEach(line => { check(5); doc.text(line, M + 3, y); y += 4.5 })
+      })
+      y += 5
+    })
+
+    // ── BRIGADE ALERT ────────────────────────────────────────────
+    if (level.value === 'faible') {
+      check(28)
+      doc.setFillColor(255, 244, 229); doc.setDrawColor(228, 106, 38); doc.setLineWidth(0.4)
+      doc.rect(M, y, W, 26, 'FD')
+      doc.setTextColor(107, 51, 0); doc.setFontSize(9.5); doc.setFont(fontName, 'bold')
+      doc.text('Votre niveau de sécurité est insuffisant', M + 4, y + 7)
+      doc.setFontSize(8); doc.setFont(fontName, 'normal')
+      const alertLines = doc.splitTextToSize(
+        'Rapprochez-vous de votre brigade de gendarmerie pour un accompagnement personnalisé. Trouvez votre brigade sur masecurite.interieur.gouv.fr',
+        W - 8
+      )
+      alertLines.forEach((l, i) => doc.text(l, M + 4, y + 14 + i * 5))
+      y += 32
+    }
+
+    // ── SIGNATURE ────────────────────────────────────────────────
+    if (sigB64) {
+      // Get natural dimensions to preserve aspect ratio
+      const sigDims = await new Promise(resolve => {
+        const img = new Image()
+        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight })
+        img.onerror = () => resolve({ w: 200, h: 80 })
+        img.src = sigB64
+      })
+      const maxW = 65
+      const ratio = sigDims.h / sigDims.w
+      const sW = maxW
+      const sH = Math.round(maxW * ratio)
+      check(sH + 8)
+      doc.addImage(sigB64, 'PNG', (210 - sW) / 2, y, sW, sH)
+      y += sH + 6
+    }
+
+    // ── FOOTER on every page ─────────────────────────────────────
+    const total = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= total; i++) {
+      doc.setPage(i)
+      doc.setDrawColor(200, 200, 215); doc.setLineWidth(0.25)
+      doc.line(M, PH - 11, 210 - M, PH - 11)
+      doc.setTextColor(160, 160, 175); doc.setFontSize(6.5); doc.setFont(fontName, 'normal')
+      doc.text('Document confidentiel à usage personnel — Ne constitue pas un rapport officiel', 105, PH - 8, { align: 'center' })
+      doc.text(`masecurite.interieur.gouv.fr  ·  Urgences : 17  ·  Page ${i} / ${total}`, 105, PH - 5, { align: 'center' })
+    }
+
+    // ── SAVE ─────────────────────────────────────────────────────
+    doc.save(`diagnostic-surete-${new Date().toISOString().split('T')[0]}.pdf`)
+
+  } finally {
+    isGenerating.value = false
   }
 }
 </script>
@@ -372,19 +498,17 @@ function downloadDiagnostic() {
 }
 
 .mascot {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
   animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.mascot--excellent { background: #e8f5e9; color: #1f8d49; }
-.mascot--moyen { background: #fff4e0; color: #b34000; }
-.mascot--faible { background: #fce9e9; color: #ce0500; }
+.mascot__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 .result-hero__content {
   flex: 1;
@@ -519,48 +643,13 @@ function downloadDiagnostic() {
 
 /* Download block */
 .result-download {
-  background: #fff;
-  border: 2px dashed #b0b0d0;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
 .result-download__btn {
-  display: inline-flex;
-  align-items: center;
+  width: 100%;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 2rem;
-  background: #0a0a5c;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  margin-bottom: 0.6rem;
-}
-
-.result-download__btn:hover {
-  background: #000091;
-}
-
-.result-download__btn i {
-  font-size: 1.2rem;
-}
-
-.result-download__hint {
-  font-size: 0.8rem;
-  color: #888;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
 }
 
 /* Contact CTA */
@@ -572,6 +661,7 @@ function downloadDiagnostic() {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .contact-cta-icon {

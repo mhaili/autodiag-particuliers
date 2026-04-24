@@ -35,12 +35,29 @@
 
         <!-- Intro card -->
         <div class="intro-card">
-          <h2 class="intro-card__title">Évaluez la sûreté de votre habitation</h2>
-          <p class="intro-card__text">
-            Ce questionnaire, proposé par la <strong>Gendarmerie Nationale</strong>,
-            vous permet d'identifier les points forts et les axes d'amélioration de la sécurité
-            de votre domicile à travers un auto-diagnostic guidé et confidentiel.
-          </p>
+          <div class="intro-card__body">
+            <div class="intro-card__text-col">
+              <h2 class="intro-card__title">Évaluez la sûreté de votre habitation</h2>
+              <p class="intro-card__text">
+                Ce questionnaire, proposé par la <strong>Gendarmerie Nationale</strong>,
+                vous permet d'identifier les points forts et les axes d'amélioration de la sécurité
+                de votre domicile à travers un auto-diagnostic guidé et confidentiel.
+              </p>
+            </div>
+            <div class="intro-card__video-col">
+              <video
+                class="intro-video"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="none"
+                aria-hidden="true"
+              >
+                <source :src="`${BASE}images/geo.webm`" type="video/webm" />
+              </video>
+            </div>
+          </div>
         </div>
 
         <!-- Metric blocks -->
@@ -79,14 +96,14 @@
 
         <!-- CTA -->
         <div class="cta-wrap">
-          <button
-            type="button"
-            class="fr-btn fr-btn--lg cta-btn"
+          <DsfrButton
+            label="Commencer le diagnostic"
+            icon="ri-arrow-right-line"
+            :icon-right="true"
+            size="lg"
+            class="cta-btn"
             @click="$router.push('/type')"
-          >
-            Commencer le diagnostic
-            <i class="ri-arrow-right-line" aria-hidden="true"></i>
-          </button>
+          />
         </div>
 
         <p class="legal">
@@ -102,17 +119,11 @@
       </div>
     </main>
 
-    <footer class="home-footer">
-      <div class="fr-container">
-        <p>© 2025 Gendarmerie Nationale · Prévention Technique de la Malveillance</p>
-      </div>
-    </footer>
-
   </div>
 </template>
 
 <script setup>
-// Purely presentational
+const BASE = import.meta.env.BASE_URL
 </script>
 
 <style scoped>
@@ -213,9 +224,38 @@
 .intro-card {
   background: #fff;
   border-radius: 12px;
-  padding: 2rem 2rem 1.75rem;
+  padding: 1.75rem 2rem;
   border-top: 4px solid #000091;
   box-shadow: 0 2px 18px rgba(0, 0, 144, 0.08);
+}
+
+.intro-card__body {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.intro-card__text-col {
+  flex: 1;
+}
+
+.intro-card__video-col {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.intro-video {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-video { display: none; }
+  .intro-card__video-col { display: none; }
 }
 
 .intro-card__title {
@@ -322,17 +362,6 @@
   margin: 0;
 }
 
-/* ─── Footer ─────────────────────────────────────────────────── */
-.home-footer {
-  background: #0b0b52;
-  color: rgba(255, 255, 255, 0.45);
-  text-align: center;
-  font-size: 0.78rem;
-  padding: 1.1rem 1rem;
-}
-
-.home-footer p { margin: 0; }
-
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .hero__content {
@@ -351,7 +380,20 @@
   }
 
   .intro-card {
-    padding: 1.5rem 1.25rem;
+    padding: 1.25rem;
+  }
+
+  .intro-card__body {
+    flex-direction: column;
+  }
+
+  .intro-card__video-col {
+    width: 100%;
+  }
+
+  .intro-video {
+    aspect-ratio: 16 / 9;
+    width: 100%;
   }
 
   .cta-btn {

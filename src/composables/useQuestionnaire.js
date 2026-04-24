@@ -1,12 +1,12 @@
 import { reactive, computed } from 'vue'
+import maisonData from '@/data/maison.json'
+import appartementData from '@/data/appartement.json'
 
 const state = reactive({
   logementType: null, // 'maison' | 'appartement'
   localisation: null,
   answers: {},        // { questionId: { value, points, label } }
-  currentSection: '',
   sectionBadges: [],  // sections completed
-  started: false,
   finished: false,
   totalPossible: 0,
 })
@@ -16,7 +16,6 @@ function setLogementType(type) {
   state.answers = {}
   state.sectionBadges = []
   state.finished = false
-  state.started = true
 }
 
 function setLocalisation(localisation) {
@@ -27,14 +26,16 @@ function answer(questionId, value, points, label) {
   state.answers[questionId] = { value, points, label }
 }
 
-function setSection(section) {
-  state.currentSection = section
-}
-
 function completeSection(section) {
   if (!state.sectionBadges.includes(section)) {
     state.sectionBadges.push(section)
   }
+}
+
+function unAnswer(questionIds) {
+  questionIds.forEach(id => {
+    delete state.answers[id]
+  })
 }
 
 function setTotalPossible(n) {
@@ -45,13 +46,15 @@ function finishQuestionnaire() {
   state.finished = true
 }
 
+function unfinish() {
+  state.finished = false
+}
+
 function reset() {
   state.logementType = null
   state.localisation = null
   state.answers = {}
-  state.currentSection = ''
   state.sectionBadges = []
-  state.started = false
   state.finished = false
   state.totalPossible = 0
 }
@@ -72,19 +75,25 @@ const scoreLevel = computed(() => {
   return 'faible'
 })
 
+const allQuestions = computed(() =>
+  state.logementType === 'maison' ? maisonData : appartementData
+)
+
 export function useQuestionnaire() {
   return {
     state,
     score,
     scorePct,
     scoreLevel,
+    allQuestions,
     setLogementType,
     setLocalisation,
     answer,
-    setSection,
+    unAnswer,
     completeSection,
     setTotalPossible,
     finishQuestionnaire,
+    unfinish,
     reset,
   }
 }

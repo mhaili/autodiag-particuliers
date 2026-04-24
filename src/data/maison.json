@@ -94,7 +94,7 @@
   {
     "id": "int_porte_a2p",
     "section": "Façades & Intérieur",
-    "text": "Le niveau de résistance de votre porte d'entrée et sa serrure sont-ils certifiés anti-effraction (A2P/CR3) ?",
+    "text": "Le niveau de résistance de votre porte d'entrée et sa serrure sont-ils certifiés anti-effraction (A2P/CR3 ou équivalent) ?",
     "info": "La certification A2P ou CR3 garantit une résistance éprouvée à l'effraction. Vérifiez sur votre porte ou dans vos documents de garantie.",
     "type": "yesno_sais_pas",
     "options": {
@@ -190,7 +190,7 @@
     "id": "quotidien_vacances_otv",
     "section": "Votre Quotidien",
     "text": "Avez-vous déjà demandé à votre brigade de gendarmerie le dispositif Opération Tranquillité Vacances (OTV) ?",
-    "info": "L'OTV permet à des patrouilles de gendarmerie de surveiller votre domicile durant votre absence. Gratuit et très efficace.",
+    "info": "L'OTV permet à des patrouilles de gendarmerie d'effectuer des passages à votre domicile durant votre absence. Gratuit et très efficace.",
     "type": "yesno",
     "options": {
       "oui": { "points": 1, "nextId": "quotidien_outils" },
@@ -221,8 +221,8 @@
   {
     "id": "quotidien_travail_clef",
     "section": "Votre Quotidien",
-    "text": "Laissez-vous vos clefs sous un pot de fleurs ou en cachette à l'extérieur ?",
-    "info": "Cacher ses clefs à l'extérieur est l'un des premiers endroits où un cambrioleur cherche.",
+    "text": "Laissez-vous vos clefs dans un endroit accessible de l'extérieur (paillasson, pierre, boîte aux lettres…) ?",
+    "info": "Tout endroit accessible de l'extérieur est parmi les premières cachettes inspectées par un cambrioleur. Confiez plutôt vos clefs à un voisin de confiance.",
     "type": "yesno",
     "options": {
       "oui": { "points": 0, "nextId": "quotidien_heures_volets" },
@@ -293,7 +293,6 @@
     "id": "quotidien_objets_valeur",
     "section": "Votre Quotidien",
     "text": "Le soir en rentrant, déposez-vous vos sacs, portefeuille ou clefs de voiture bien en vue près de la porte d'entrée ?",
-    "info": "Des objets de valeur visibles près d'une entrée peuvent être facilement subtilisés par un bras passé dans une chatière ou un vitrage brisé.",
     "type": "yesno",
     "options": {
       "oui": { "points": 0, "nextId": "quotidien_objets_ranges" },

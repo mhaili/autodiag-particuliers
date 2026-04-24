@@ -76,6 +76,14 @@
               >
                 {{ answerLabel(answers[q.id].value) }}
               </span>
+              <button
+                type="button"
+                class="q-done-row__edit"
+                @click="editAnswer(q)"
+                :aria-label="`Modifier la réponse : ${q.text}`"
+              >
+                <i class="ri-pencil-line" aria-hidden="true"></i>
+              </button>
             </div>
 
             <!-- Active: full question -->
@@ -127,14 +135,14 @@
       <!-- ===== Section done: continue button ===== -->
       <Transition name="q-appear-single">
         <div v-if="sectionDone && !showOverlay" class="q-next">
-          <button
-            type="button"
-            class="fr-btn fr-btn--lg q-next__btn"
+          <DsfrButton
+            :label="isLastSection ? 'Voir mes résultats' : 'Section suivante'"
+            icon="ri-arrow-right-line"
+            :icon-right="true"
+            size="lg"
+            class="q-next__btn"
             @click="goNext"
-          >
-            {{ isLastSection ? 'Voir mes résultats' : 'Section suivante' }}
-            <i class="ri-arrow-right-line" aria-hidden="true"></i>
-          </button>
+          />
 
           <div v-if="completedSections.length" class="q-badges">
             <span v-for="sec in completedSections" :key="sec" class="q-badge">
@@ -151,22 +159,18 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useQuestionnaire } from '@/composables/useQuestionnaire.js'
 import AppHeader from '@/components/AppHeader.vue'
-import maisonData from '@/data/maison.json'
-import appartementData from '@/data/appartement.json'
+import { sectionIconMap, answerLabel } from '@/data/sections.js'
 
 const router = useRouter()
-const { state, answer, completeSection, setTotalPossible, finishQuestionnaire, score } = useQuestionnaire()
+const route = useRoute()
+const { state, answer, unAnswer, completeSection, setTotalPossible, finishQuestionnaire, unfinish, score, allQuestions } = useQuestionnaire()
 
 // ──────────────────────────────────────────────
 // Data helpers
 // ──────────────────────────────────────────────
-const allQuestions = computed(() =>
-  state.logementType === 'maison' ? maisonData : appartementData
-)
-
 const questionById = computed(() => {
   const m = {}
   allQuestions.value.forEach(q => { m[q.id] = q })
@@ -180,21 +184,6 @@ const sectionNames = computed(() => {
   })
   return seen
 })
-
-const sectionIconMap = {
-  'Extérieurs': 'ri-landscape-line',
-  'Façades & Intérieur': 'ri-door-open-line',
-  'Votre Quotidien': 'ri-calendar-check-line',
-  'Immeuble': 'ri-building-2-line',
-  "Accès à l'immeuble": 'ri-key-line',
-  'Votre Logement': 'ri-home-heart-line',
-}
-
-function answerLabel(value) {
-  if (value === 'oui') return 'Oui'
-  if (value === 'non') return 'Non'
-  return 'Je ne sais pas'
-}
 
 // ──────────────────────────────────────────────
 // State
@@ -238,7 +227,28 @@ onMounted(() => {
     return
   }
   setTotalPossible(allQuestions.value.length + 2)
-  initSection(allQuestions.value[0].id)
+
+  const editSection = route.query.editSection
+  if (editSection) {
+    // Coming from recap to edit a specific section — reinitialize from that section
+    unfinish()
+    const targetIdx = sectionNames.value.indexOf(editSection)
+    const idx = targetIdx >= 0 ? targetIdx : 0
+
+    // Clear answers for the target section and all subsequent sections
+    const questionsToRemove = allQuestions.value
+      .filter(q => sectionNames.value.indexOf(q.section) >= idx)
+      .map(q => q.id)
+    unAnswer(questionsToRemove)
+
+    currentSectionIdx.value = idx
+    lastSectionScore.value = score.value
+
+    const firstQ = allQuestions.value.find(q => q.section === editSection)
+    initSection(firstQ ? firstQ.id : allQuestions.value[0].id)
+  } else {
+    initSection(allQuestions.value[0].id)
+  }
 })
 
 function initSection(firstId) {
@@ -290,6 +300,31 @@ function selectAnswer(q, key) {
 }
 
 // ──────────────────────────────────────────────
+// Edit a previous answer
+// ──────────────────────────────────────────────
+function editAnswer(q) {
+  const idx = visibleQuestions.value.findIndex(vq => vq.id === q.id)
+  if (idx === -1) return
+
+  // Remove answers for this question and all that follow in the current section
+  const toRemove = visibleQuestions.value.slice(idx).map(vq => vq.id)
+  unAnswer(toRemove)
+
+  // Keep visible questions only up to (and including) this one — it becomes active
+  visibleQuestions.value = visibleQuestions.value.slice(0, idx + 1)
+
+  // Reset section state
+  sectionDone.value = false
+  isFinishing.value = false
+  nextSectionFirstId.value = null
+
+  nextTick(() => {
+    const el = document.getElementById(`q-${q.id}`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+}
+
+// ──────────────────────────────────────────────
 // Go to next section
 // ──────────────────────────────────────────────
 function goNext() {
@@ -306,7 +341,7 @@ function goNext() {
 
     if (isFinishing.value) {
       finishQuestionnaire()
-      router.push('/resultat')
+      router.push('/recapitulatif')
     } else {
       currentSectionIdx.value++
       initSection(nextSectionFirstId.value)
@@ -424,18 +459,18 @@ function goNext() {
 }
 .q-section-head i {
   font-size: 1.4rem;
-  color: #000091;
+  color: var(--blue-france-sun-113-625);
 }
 .q-section-head h2 {
   font-size: 1.2rem;
   font-weight: 700;
   margin: 0;
-  color: #161616;
+  color: var(--text-title-grey);
   flex: 1;
 }
 .q-section-head__count {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-mention-grey);
   white-space: nowrap;
 }
 
@@ -490,6 +525,30 @@ function goNext() {
 .q-done-row__ans--oui     { background: #e8f5e9; color: #1a5c33; }
 .q-done-row__ans--non     { background: #fce9e9; color: #8d0000; }
 .q-done-row__ans--sais_pas { background: #ededfd; color: #000091; }
+
+.q-done-row__edit {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #d0d0e0;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+.q-done-row__edit:hover,
+.q-done-row__edit:focus-visible {
+  border-color: #000091;
+  background: #f0f0ff;
+  color: #000091;
+  outline: none;
+}
 
 /* Active question */
 .q-active-inner {
@@ -627,12 +686,12 @@ function goNext() {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1f8d49, #099a3d);
+  background: var(--background-action-high-success);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1rem;
-  color: #fff;
+  color: var(--text-inverted-grey);
   font-size: 2rem;
 }
 .section-overlay__title { font-weight: 700; font-size: 1.1rem; color: #1f8d49; margin: 0 0 0.25rem; }

@@ -4,10 +4,11 @@
 
     <main id="main-content" class="fr-container type-main">
       <div class="type-card">
-        <div class="type-card__step">Étape 1 sur 2 · Localisation</div>
-        <h2 class="type-card__title">Quel type de logement avez-vous ?</h2>
-        <p class="type-card__desc">Sélectionnez votre situation pour commencer le questionnaire adapté.</p>
+        <p class="type-card__step fr-badge fr-badge--info fr-badge--no-icon">Étape 1 sur 2 · Localisation</p>
+        <h2 class="fr-h2 type-card__title">Quel type de logement avez-vous ?</h2>
+        <p class="fr-text--lg type-card__desc">Sélectionnez votre situation pour commencer le questionnaire adapté.</p>
 
+        <!-- Logement type — rich card choices -->
         <div class="type-choices">
           <button
             v-for="option in logementOptions"
@@ -17,7 +18,7 @@
             :aria-pressed="selectedType === option.value"
             @click="select(option.value)"
           >
-            <i :class="option.icon" class="type-choice__icon"></i>
+            <VIcon :name="option.icon" class="type-choice__icon" aria-hidden="true" />
             <span class="type-choice__label">{{ option.label }}</span>
             <span class="type-choice__desc">{{ option.desc }}</span>
           </button>
@@ -25,50 +26,65 @@
 
         <Transition name="slide-up">
           <div v-if="selectedType" class="type-localisation">
-            <h3 class="type-loc__title">Votre environnement</h3>
 
-            <div class="type-loc__group">
-              <label class="type-loc__label">Situation géographique</label>
-              <div class="type-choices type-choices--small">
-                <button
-                  v-for="loc in localisationOptions"
-                  :key="loc.value"
-                  class="type-choice type-choice--small"
-                  :class="{ 'type-choice--selected': selectedLocalisation === loc.value }"
-                  @click="selectedLocalisation = loc.value"
+            <!-- Localisation — icon card choices -->
+            <p class="type-loc__legend">Situation géographique</p>
+            <div class="type-choices type-choices--loc">
+              <button
+                v-for="loc in localisationOptions"
+                :key="loc.value"
+                class="type-choice"
+                :class="{ 'type-choice--selected': selectedLocalisation === loc.value }"
+                :aria-pressed="selectedLocalisation === loc.value"
+                @click="selectedLocalisation = loc.value"
+              >
+                <VIcon :name="loc.icon" class="type-choice__icon" aria-hidden="true" />
+                <span class="type-choice__label">{{ loc.label }}</span>
+              </button>
+            </div>
+
+            <!-- Oui/Non questions — only after localisation selected -->
+            <Transition name="slide-up">
+              <div v-if="selectedLocalisation" class="type-loc__questions">
+                <DsfrRadioButtonSet
+                  v-model="eclairage"
+                  :options="ouiNonOptions"
+                  :inline="true"
+                  name="eclairage"
                 >
-                  <i :class="loc.icon" class="type-choice__icon"></i>
-                  <span class="type-choice__label">{{ loc.label }}</span>
-                </button>
-              </div>
-            </div>
+                  <template #legend>
+                    <span class="type-loc__q-legend">
+                      <VIcon name="ri-lightbulb-line" aria-hidden="true" />
+                      La rue est-elle équipée d'un éclairage public ?
+                    </span>
+                  </template>
+                </DsfrRadioButtonSet>
 
-            <div class="type-loc__questions">
-              <div class="type-loc__q">
-                <span class="type-loc__q-text"><i class="ri-lightbulb-line"></i> La rue est-elle équipée d'un éclairage public ?</span>
-                <div class="type-yesno">
-                  <button class="yn-btn" :class="{ 'yn-btn--on': eclairage === 'oui' }" @click="eclairage = 'oui'">Oui</button>
-                  <button class="yn-btn" :class="{ 'yn-btn--off': eclairage === 'non' }" @click="eclairage = 'non'">Non</button>
-                </div>
-              </div>
-              <div class="type-loc__q">
-                <span class="type-loc__q-text"><i class="ri-camera-line"></i> La commune est-elle équipée de vidéo-protection ?</span>
-                <div class="type-yesno">
-                  <button class="yn-btn" :class="{ 'yn-btn--on': videoprotection === 'oui' }" @click="videoprotection = 'oui'">Oui</button>
-                  <button class="yn-btn" :class="{ 'yn-btn--off': videoprotection === 'non' }" @click="videoprotection = 'non'">Non</button>
-                </div>
-              </div>
-            </div>
+                <DsfrRadioButtonSet
+                  v-model="videoprotection"
+                  :options="ouiNonOptions"
+                  :inline="true"
+                  name="videoprotection"
+                >
+                  <template #legend>
+                    <span class="type-loc__q-legend">
+                      <VIcon name="ri-camera-line" aria-hidden="true" />
+                      La commune est-elle équipée de vidéo-protection ?
+                    </span>
+                  </template>
+                </DsfrRadioButtonSet>
 
-            <button
-              type="button"
-              class="fr-btn fr-btn--lg type-cta"
-              :disabled="!canContinue"
-              @click="continuer"
-            >
-              Continuer le questionnaire
-              <i class="ri-arrow-right-line" aria-hidden="true"></i>
-            </button>
+                <DsfrButton
+                  label="Continuer le questionnaire"
+                  icon="ri-arrow-right-line"
+                  :icon-right="true"
+                  size="lg"
+                  :disabled="!canContinue"
+                  class="type-cta"
+                  @click="continuer"
+                />
+              </div>
+            </Transition>
           </div>
         </Transition>
       </div>
@@ -85,24 +101,31 @@ import AppHeader from '@/components/AppHeader.vue'
 const router = useRouter()
 const { setLogementType, setLocalisation, answer } = useQuestionnaire()
 
-const selectedType = ref(null)
+const selectedType         = ref(null)
 const selectedLocalisation = ref(null)
-const eclairage = ref(null)
-const videoprotection = ref(null)
+const eclairage            = ref(null)
+const videoprotection      = ref(null)
 
 const logementOptions = [
-  { value: 'maison', label: 'Maison individuelle', icon: 'ri-home-2-line', desc: 'Maison avec ou sans jardin' },
-  { value: 'appartement', label: 'Appartement', icon: 'ri-building-2-line', desc: 'En immeuble collectif' },
+  { value: 'maison',      label: 'Maison individuelle', icon: 'ri-home-2-line',     desc: 'Maison avec ou sans jardin' },
+  { value: 'appartement', label: 'Appartement',         icon: 'ri-building-2-line', desc: 'En immeuble collectif' },
 ]
 
 const localisationOptions = [
-  { value: 'ville', label: 'Ville', icon: 'ri-building-4-line' },
-  { value: 'petite_commune', label: 'Petite commune', icon: 'ri-community-line' },
-  { value: 'campagne', label: 'Campagne', icon: 'ri-tree-line' },
-  { value: 'lotissement', label: 'Lotissement', icon: 'ri-layout-grid-line' },
+  { value: 'ville',          label: 'Ville',          icon: 'ri-building-4-line' },
+  { value: 'petite_commune', label: 'Petite commune',  icon: 'ri-community-line'  },
+  { value: 'campagne',       label: 'Campagne',        icon: 'ri-tree-line'       },
+  { value: 'lotissement',    label: 'Lotissement',     icon: 'ri-layout-grid-line'},
 ]
 
-const canContinue = computed(() => selectedLocalisation.value && eclairage.value && videoprotection.value)
+const ouiNonOptions = [
+  { value: 'oui', label: 'Oui' },
+  { value: 'non', label: 'Non' },
+]
+
+const canContinue = computed(() =>
+  selectedLocalisation.value && eclairage.value && videoprotection.value
+)
 
 function select(type) {
   selectedType.value = type
@@ -111,7 +134,7 @@ function select(type) {
 function continuer() {
   setLogementType(selectedType.value)
   setLocalisation(selectedLocalisation.value)
-  answer('type_eclairage', eclairage.value, eclairage.value === 'oui' ? 1 : 0, `Éclairage public : ${eclairage.value}`)
+  answer('type_eclairage',      eclairage.value,      eclairage.value      === 'oui' ? 1 : 0, `Éclairage public : ${eclairage.value}`)
   answer('type_videoprotection', videoprotection.value, videoprotection.value === 'oui' ? 1 : 0, `Vidéo-protection : ${videoprotection.value}`)
   router.push('/questionnaire')
 }
@@ -120,7 +143,7 @@ function continuer() {
 <style scoped>
 .type-page {
   min-height: 100vh;
-  background: #f5f5fe;
+  background: var(--background-alt-blue-france);
 }
 
 .type-main {
@@ -130,43 +153,32 @@ function continuer() {
 }
 
 .type-card {
-  background: #fff;
+  background: var(--background-default-grey);
   border-radius: 16px;
   padding: 2.5rem 2rem;
-  box-shadow: 0 4px 24px rgba(0,0,144,0.1);
-  border-top: 4px solid #000091;
+  box-shadow: 0 4px 24px rgba(0, 0, 144, 0.1);
+  border-top: 4px solid var(--blue-france-sun-113-625);
 }
 
 .type-card__step {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #000091;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .type-card__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #161616;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
 }
 
 .type-card__desc {
-  color: #666;
-  margin: 0 0 1.5rem 0;
+  color: var(--text-mention-grey);
+  margin: 0 0 1.5rem;
 }
 
+/* Logement type — rich card choices */
 .type-choices {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
-}
-
-.type-choices--small {
-  margin-bottom: 0;
 }
 
 .type-choice {
@@ -177,129 +189,81 @@ function continuer() {
   align-items: center;
   gap: 0.4rem;
   padding: 1.25rem 1rem;
-  border: 2px solid #e0e0f0;
+  border: 2px solid var(--border-default-grey);
   border-radius: 12px;
-  background: #fff;
+  background: var(--background-default-grey);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  font-family: inherit;
 }
 
 .type-choice:hover {
-  border-color: #000091;
-  background: #f0f0ff;
+  border-color: var(--blue-france-sun-113-625);
+  background: var(--background-alt-blue-france);
 }
 
 .type-choice--selected {
-  border-color: #000091;
-  background: #f0f0ff;
+  border-color: var(--blue-france-sun-113-625);
+  background: var(--background-alt-blue-france);
   box-shadow: 0 0 0 3px rgba(0, 0, 145, 0.15);
-}
-
-.type-choice--small {
-  min-width: 110px;
-  padding: 0.875rem 0.75rem;
 }
 
 .type-choice__icon {
   font-size: 1.75rem;
-  color: #000091;
+  color: var(--blue-france-sun-113-625);
 }
 
 .type-choice__label {
   font-weight: 600;
   font-size: 0.95rem;
-  color: #161616;
+  color: var(--text-title-grey);
 }
 
 .type-choice__desc {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--text-mention-grey);
 }
 
+/* Localisation + Questions */
 .type-localisation {
-  border-top: 1px solid #e0e0f0;
+  border-top: 1px solid var(--border-default-grey);
   padding-top: 1.5rem;
 }
 
-.type-loc__title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  color: #161616;
-}
-
-.type-loc__group {
-  margin-bottom: 1.25rem;
-}
-
-.type-loc__label {
-  display: block;
+.type-loc__legend {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #555;
-  margin-bottom: 0.6rem;
+  color: var(--text-title-grey);
+  margin: 0 0 0.75rem;
+}
+
+.type-choices--loc {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .type-choices--loc {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .type-loc__questions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.type-loc__q {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: #f5f5fe;
-  padding: 0.875rem 1rem;
-  border-radius: 8px;
-  flex-wrap: wrap;
-}
-
-.type-loc__q-text {
+.type-loc__q-legend {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: #333;
-  flex: 1;
-}
-
-.type-loc__q-text i {
-  color: #000091;
-  flex-shrink: 0;
-}
-
-.type-yesno {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.yn-btn {
-  padding: 0.35rem 1rem;
-  border-radius: 20px;
-  border: 2px solid #d0d0e0;
-  background: #fff;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.15s;
-  color: #555;
-}
-
-.yn-btn--on {
-  border-color: #1f8d49;
-  background: #e8f5e9;
-  color: #1a5c33;
-}
-
-.yn-btn--off {
-  border-color: #ce0500;
-  background: #fce9e9;
-  color: #8d0000;
+  font-weight: 600;
+  color: var(--text-title-grey);
 }
 
 .type-cta {
@@ -307,7 +271,6 @@ function continuer() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
 }
 
 /* Transitions */

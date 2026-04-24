@@ -41,7 +41,7 @@
           </div>
         </div>
         <a
-          href="https://www.masecurite.interieur.gouv.fr/"
+          href="https://www.masecurite.interieur.gouv.fr/fr/demarches-en-ligne/operation-tranquillite-vacances?hl=OTV"
           target="_blank"
           rel="noopener noreferrer"
           class="reco-otv-banner__btn"
@@ -52,22 +52,17 @@
       </div>
 
       <div class="reco-actions">
-        <button
-          type="button"
-          class="fr-btn fr-btn--secondary"
+        <DsfrButton
+          label="Retour aux résultats"
+          icon="ri-arrow-left-line"
+          :secondary="true"
           @click="$router.push('/resultat')"
-        >
-          <i class="ri-arrow-left-line" aria-hidden="true"></i>
-          Retour aux résultats
-        </button>
-        <button
-          type="button"
-          class="fr-btn"
+        />
+        <DsfrButton
+          label="Nouveau diagnostic"
+          icon="ri-restart-line"
           @click="restart"
-        >
-          <i class="ri-restart-line" aria-hidden="true"></i>
-          Nouveau diagnostic
-        </button>
+        />
       </div>
     </main>
   </div>
