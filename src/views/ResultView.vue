@@ -179,70 +179,8 @@ async function downloadDiagnostic() {
     ])
 
     // ── Init document ────────────────────────────────────────────
-    // ── Load Marianne font (WOFF → TTF) ──────────────────────────
-    async function woffToTtf(woffBuf) {
-      const view = new DataView(woffBuf)
-      if (view.getUint32(0) !== 0x774F4646) throw new Error('Not a WOFF file')
-      const flavor = view.getUint32(4)
-      const numTables = view.getUint16(12)
-      const tables = []
-      for (let i = 0; i < numTables; i++) {
-        const o = 44 + i * 20
-        tables.push({ tag: view.getUint32(o), offset: view.getUint32(o + 4), compLength: view.getUint32(o + 8), origLength: view.getUint32(o + 12), checksum: view.getUint32(o + 16) })
-      }
-      const decomp = await Promise.all(tables.map(async t => {
-        const raw = new Uint8Array(woffBuf, t.offset, t.compLength)
-        if (t.compLength === t.origLength) return { ...t, data: raw }
-        const ds = new DecompressionStream('deflate')
-        const writer = ds.writable.getWriter()
-        const reader = ds.readable.getReader()
-        const CHUNK = 65536
-        for (let i = 0; i < raw.length; i += CHUNK) await writer.write(raw.subarray(i, Math.min(i + CHUNK, raw.length)))
-        writer.close()
-        const chunks = []
-        for (;;) { const { value, done } = await reader.read(); if (done) break; chunks.push(value) }
-        const out = new Uint8Array(chunks.reduce((s, c) => s + c.length, 0))
-        let pos = 0; for (const c of chunks) { out.set(c, pos); pos += c.length }
-        return { ...t, data: out }
-      }))
-      const n = numTables
-      const pow2 = Math.pow(2, Math.floor(Math.log2(n)))
-      let dataStart = 12 + n * 16
-      const offsets = decomp.map(t => { const o = dataStart; dataStart += Math.ceil(t.origLength / 4) * 4; return o })
-      const ttf = new ArrayBuffer(dataStart)
-      const ov = new DataView(ttf); const ob = new Uint8Array(ttf)
-      ov.setUint32(0, flavor); ov.setUint16(4, n)
-      ov.setUint16(6, pow2 * 16); ov.setUint16(8, Math.floor(Math.log2(n))); ov.setUint16(10, n * 16 - pow2 * 16)
-      for (let i = 0; i < n; i++) {
-        const t = decomp[i]; const d = 12 + i * 16
-        ov.setUint32(d, t.tag); ov.setUint32(d + 4, t.checksum)
-        ov.setUint32(d + 8, offsets[i]); ov.setUint32(d + 12, t.origLength)
-        ob.set(t.data.subarray(0, t.origLength), offsets[i])
-      }
-      return ttf
-    }
-    function bufToB64(buf) {
-      const b = new Uint8Array(buf); let s = ''
-      for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i])
-      return btoa(s)
-    }
-    const fontBase = `${window.location.origin}${import.meta.env.BASE_URL}fonts/`
-    const [marianneRegB64, marianneBoldB64] = await Promise.all([
-      fetch(fontBase + 'Marianne-Regular.woff').then(r => r.arrayBuffer()).then(woffToTtf).then(bufToB64).catch(() => null),
-      fetch(fontBase + 'Marianne-Bold.woff').then(r => r.arrayBuffer()).then(woffToTtf).then(bufToB64).catch(() => null),
-    ])
-
     const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-
-    // Register Marianne — fallback to helvetica if loading failed
-    let fontName = 'helvetica'
-    if (marianneRegB64 && marianneBoldB64) {
-      doc.addFileToVFS('Marianne-Regular.ttf', marianneRegB64)
-      doc.addFont('Marianne-Regular.ttf', 'Marianne', 'normal')
-      doc.addFileToVFS('Marianne-Bold.ttf', marianneBoldB64)
-      doc.addFont('Marianne-Bold.ttf', 'Marianne', 'bold')
-      fontName = 'Marianne'
-    }
+    const fontName = 'helvetica'
     const M = 14        // margin
     const W = 182       // content width (210 - 2*14)
     const PH = 297      // page height
@@ -458,6 +396,8 @@ async function downloadDiagnostic() {
     // ── SAVE ─────────────────────────────────────────────────────
     doc.save(`diagnostic-surete-${new Date().toISOString().split('T')[0]}.pdf`)
 
+  } catch (e) {
+    console.error('Erreur génération PDF:', e)
   } finally {
     isGenerating.value = false
   }
